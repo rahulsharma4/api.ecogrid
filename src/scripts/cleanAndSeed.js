@@ -49,10 +49,10 @@ const cleanAndSeed = async () => {
     
     // Create new admin user
     const adminUser = new User({
-      name: process.env.ADMIN_NAME || 'Admin Azad Volthut Power LLP',
-      email: process.env.ADMIN_EMAIL || 'volthut@gmail.com',
+      name: process.env.ADMIN_NAME || 'EcoGrid Admin',
+      email: process.env.ADMIN_EMAIL || 'info@ecogridinfra.in',
       phone: process.env.ADMIN_PHONE || '6387006600',
-      password: process.env.ADMIN_PASSWORD || 'Admin@azad123', // Hashes automatically via userModel's pre-save middleware
+      password: process.env.ADMIN_PASSWORD || 'Admin@ecogrid123', // Hashes automatically via userModel's pre-save middleware
       role: 'admin',
       status: 'active'
     });
