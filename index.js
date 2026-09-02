@@ -66,3 +66,5 @@ const server = app.listen(PORT, () => {
   const { startReminderScheduler } = require('./src/utils/scheduler');
   startReminderScheduler();
 });
+// Trigger nodemon restart
+// Restart nodemon
