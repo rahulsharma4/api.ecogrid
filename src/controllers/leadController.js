@@ -127,15 +127,19 @@ const handleGoogleFormWebhook = async (req, res) => {
   }
 };
 
-// @desc    Get all leads (Admin: all, Staff: assigned only)
+// @desc    Get all leads (Admin: all, Staff: assigned, created, or company leads)
 // @route   GET /api/leads
 // @access  Private
 const getLeads = async (req, res) => {
   try {
     let query = {};
     if (req.user.role !== 'admin') {
-      query.owner = req.user.owner;
-      query.assignedTo = req.user._id;
+      const userOwnerId = req.user.owner || req.user._id;
+      query.$or = [
+        { owner: userOwnerId },
+        { assignedTo: req.user._id },
+        { createdBy: req.user._id }
+      ];
     }
 
     const leads = await Lead.find(query)
@@ -163,8 +167,15 @@ const updateLead = async (req, res) => {
         return res.status(400).json({ message: 'This lead is closed and cannot be modified' });
       }
 
-      // Check if staff is authorized to update this lead
-      if (req.user.role !== 'admin' && lead.assignedTo.toString() !== req.user._id.toString()) {
+      // Check if staff/user is authorized to update this lead
+      const leadOwnerStr = lead.owner ? lead.owner.toString() : '';
+      const userOwnerStr = req.user.role === 'admin' ? req.user._id.toString() : (req.user.owner ? req.user.owner.toString() : req.user._id.toString());
+      const isAuthorized = req.user.role === 'admin' ||
+                           leadOwnerStr === userOwnerStr ||
+                           (lead.assignedTo && lead.assignedTo.toString() === req.user._id.toString()) ||
+                           (lead.createdBy && lead.createdBy.toString() === req.user._id.toString());
+
+      if (!isAuthorized) {
         return res.status(401).json({ message: 'Not authorized to update this lead' });
       }
 
@@ -215,12 +226,13 @@ const updateLead = async (req, res) => {
         lead.personalInfo = { ...lead.personalInfo, ...req.body.personalInfo };
       }
 
-      // Only admin can reassign leads & edit creation date
-      if (req.user.role === 'admin') {
+      // Allow assigning / reassigning leads for all authorized staff/admin
+      if (req.body.assignedTo !== undefined) {
         lead.assignedTo = req.body.assignedTo || lead.assignedTo;
-        if (req.body.createdAt) {
-          lead.createdAt = new Date(req.body.createdAt);
-        }
+      }
+
+      if (req.user.role === 'admin' && req.body.createdAt) {
+        lead.createdAt = new Date(req.body.createdAt);
       }
 
       const isNewFollowUp = req.body.followUpDate && req.body.followUpDate !== lead.followUpDate?.toISOString();

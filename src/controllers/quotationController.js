@@ -35,12 +35,6 @@ const createQuotation = async (req, res) => {
     const earlyDisc = Number(earlyBirdDiscount) || 0;
     const addDisc = Number(additionalDiscount) || 0;
 
-    if (earlyDisc > 10000) {
-      return res.status(400).json({ message: 'Early bird discount cannot exceed ₹10,000' });
-    }
-    if (addDisc > 5000) {
-      return res.status(400).json({ message: 'Additional discount cannot exceed ₹5,000' });
-    }
     const isInclusive = isGstInclusive === true || isGstInclusive === 'true';
     const gstPerc = isInclusive ? 8.9 : (Number(gstPercentage) || 0);
     const centralSub = Number(centralSubsidy) || 0;
@@ -221,12 +215,6 @@ const updateQuotation = async (req, res) => {
     const earlyDisc = Number(earlyBirdDiscount) || 0;
     const addDisc = Number(additionalDiscount) || 0;
 
-    if (earlyDisc > 10000) {
-      return res.status(400).json({ message: 'Early bird discount cannot exceed ₹10,000' });
-    }
-    if (addDisc > 5000) {
-      return res.status(400).json({ message: 'Additional discount cannot exceed ₹5,000' });
-    }
     const isInclusive = isGstInclusive === true || isGstInclusive === 'true';
     const gstPerc = isInclusive ? 8.9 : (Number(gstPercentage) || 0);
     const centralSub = Number(centralSubsidy) || 0;
