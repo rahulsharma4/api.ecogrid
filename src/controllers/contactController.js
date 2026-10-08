@@ -127,10 +127,10 @@ const getContacts = async (req, res) => {
 
 // @desc    Create a single contact
 // @route   POST /api/contacts
-// @access  Private/Admin
+// @access  Private
 const createContact = async (req, res) => {
   try {
-    const { name, phone, address, monthlyBill, status, callingStatus, subStatus, remarks, source, referredByStaff, referredByCustomer, paymentMode } = req.body;
+    const { name, phone, address, monthlyBill, status, callingStatus, subStatus, remarks, source, referredByStaff, referredByCustomer, paymentMode, assignedTo } = req.body;
     
     // Check for duplicate phone
     if (phone) {
@@ -142,6 +142,10 @@ const createContact = async (req, res) => {
 
     const initialStatus = status || 'New';
     const initialRemarks = remarks || '';
+
+    // If creator is non-admin, assign to creator by default so it shows in their My Overall Leads list
+    const assignedToUser = req.user.role !== 'admin' ? (assignedTo || req.user._id) : (assignedTo || null);
+
     const contact = new Contact({
       name,
       phone,
@@ -155,6 +159,7 @@ const createContact = async (req, res) => {
       referredByStaff: referredByStaff || null,
       referredByCustomer: referredByCustomer || null,
       paymentMode: paymentMode || 'Direct',
+      assignedTo: assignedToUser,
       createdBy: req.user._id,
       owner: req.user._id,
       statusHistory: [
@@ -168,6 +173,7 @@ const createContact = async (req, res) => {
     });
     const createdContact = await contact.save();
     const populatedContact = await Contact.findById(createdContact._id)
+      .populate('assignedTo', 'name email phone role')
       .populate('createdBy', 'name role')
       .populate('updatedBy', 'name role')
       .populate('referredByStaff', 'name')
@@ -380,7 +386,7 @@ const convertContactToLead = async (req, res) => {
       referredByStaff: referredByStaff || contact.referredByStaff || null,
       referredByCustomer: referredByCustomer || contact.referredByCustomer || null,
       paymentMode: paymentMode || contact.paymentMode || 'Direct',
-      assignedTo: assignedTo || null, // initially unassigned unless explicitly passed
+      assignedTo: assignedTo || (req.user.role !== 'admin' ? req.user._id : null),
       createdBy: req.user._id,
       owner: req.user.role === 'admin' ? req.user._id : req.user.owner,
       history: [

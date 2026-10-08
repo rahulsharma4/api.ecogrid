@@ -17,7 +17,7 @@ const { protect, admin } = require('../middleware/authMiddleware');
 
 router.route('/')
   .get(protect, getContacts)
-  .post(protect, admin, createContact);
+  .post(protect, createContact);
 
 router.route('/bulk')
   .post(protect, admin, bulkCreateContacts)
